@@ -41,4 +41,10 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
         features = self._combine_with_existing_text_features(message, feature_vector)
         # Set the feature, overwriting any existing `text_features`
         message.set("text_features", features)
+        def _split(self, line):
+        words = []
+        for fragment in line.strip().split():
+            for token in re.split(self._WORD_SPLIT, fragment):
+                words.append(token)
+        return " ".join(words)
 
