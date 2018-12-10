@@ -3,8 +3,11 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
+import re
+
 import tensorflow as tf
 import tensorflow_hub as hub
+
 from rasa_nlu.featurizers import Featurizer
 
 
@@ -23,6 +26,7 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
         self.input_string = tf.placeholder(tf.string, shape=[None])
         # Invoke `sentence_encoder` in order to create the encoding tensor
         self.encoding = sentence_encoder(self.input_string)
+        self._WORD_SPLIT = re.compile(u"([.,!?\"'-<>:;)(])")
 
         self.session = tf.Session()
         self.session.run([tf.global_variables_initializer(),
@@ -35,16 +39,17 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
     def process(self, message, **kwargs):
         # Get the sentence encoding by feeding the message text and computing
         # the encoding tensor.
+        text = self._split(message.text)
         feature_vector = self.session.run(self.encoding,
-                                          {self.input_string: [message.text]})[0]
+                                          {self.input_string: [text]})[0]
         # Concatenate the feature vector with any existing text features
         features = self._combine_with_existing_text_features(message, feature_vector)
         # Set the feature, overwriting any existing `text_features`
         message.set("text_features", features)
-        def _split(self, line):
+
+    def _split(self, line):
         words = []
         for fragment in line.strip().split():
             for token in re.split(self._WORD_SPLIT, fragment):
                 words.append(token)
         return " ".join(words)
-
