@@ -18,15 +18,7 @@ class OrderCodeExtractor(EntityExtractor):
 
     def process(self, message, **kwargs):
         # type: (Message, **Any) -> None
-
-        # can't use the existing doc here (spacy_doc on the message)
-        # because tokens are lower cased which is bad for NER
-
-        # extracted = self.add_extractor_name(self.extract_entities(doc))
-        # message.set("entities",
-        #             message.get("entities", []) + extracted,
-        #             add_to_output=True)
-        if message.get("intent").get("name") == "order_code":
+        if "order_code" in message.get("intent").get("name"):
             for entity_mapper in message.get("entities"):
                 if entity_mapper["entity"] == "order_code":
                     return
