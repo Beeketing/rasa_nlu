@@ -28,7 +28,7 @@ class OrderCodeExtractor(EntityExtractor):
         #             add_to_output=True)
         if message.get("intent") == "order_code":
             for entity_mapper in message.get("entities"):
-                if entity_mapper["entity"] == "order_code":
+                if entity_mapper["entity"] != "order_code":
                     return
         text = message.text
         order_code = ""
