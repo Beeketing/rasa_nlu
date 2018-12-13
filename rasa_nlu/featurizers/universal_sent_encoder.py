@@ -18,7 +18,8 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
     name = "universal_sentence_encoder_featurizer"
     requires = []
     provides = ["text_features"]
-    stopwords = set(["thank", "you", "the", "please", "me", "her", "his", "will", "just", "myself", "ourselves", "I"])
+    stopwords = set(
+        ["thank", "you", "the", "please", "me", "her", "his", "will", "just", "myself", "ourselves", "I", "yes"])
 
     def __init__(self, component_config):
         super(UniversalSentenceEncoderFeaturizer, self).__init__(component_config)
@@ -41,6 +42,8 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
         # Get the sentence encoding by feeding the message text and computing
         # the encoding tensor.
         text = self._clean_stop_words(message.text)
+        if len(text) == 0 or len(text.split()) <= 2:
+            text = message.text
         text = self._split(text)
         feature_vector = self.session.run(self.encoding,
                                           {self.input_string: [text]})[0]
