@@ -20,6 +20,7 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
     provides = ["text_features"]
     stopwords = set(
         ["thank", "you", "the", "please", "me", "her", "his", "will", "just", "myself", "ourselves", "I", "yes"])
+    spliter = re.compile("([#()!><])")
 
     def __init__(self, component_config):
         super(UniversalSentenceEncoderFeaturizer, self).__init__(component_config)
@@ -41,7 +42,9 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
     def process(self, message, **kwargs):
         # Get the sentence encoding by feeding the message text and computing
         # the encoding tensor.
-        text = self._clean_stop_words(message.text)
+        raw_text = message.text
+        text = self._split_delimiter(raw_text)
+        text = self._clean_stop_words(text)
         if len(text) == 0 or len(text.split()) <= 2:
             text = message.text
         text = self._split(text)
@@ -62,3 +65,6 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
     def _clean_stop_words(self, line):
         tokens = [token for token in line.split(" ") if token not in self.stopwords]
         return " ".join(tokens)
+
+    def _split_delimiter(self, text):
+        return self.spliter.sub(" \\1", text)
