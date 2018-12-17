@@ -43,8 +43,8 @@ class UniversalSentenceEncoderFeaturizer(Featurizer):
         # Get the sentence encoding by feeding the message text and computing
         # the encoding tensor.
         raw_text = message.text
-        text = self._split_delimiter(raw_text)
-        text = self._clean_stop_words(text)
+        # text = self._split_delimiter(raw_text)
+        text = self._clean_stop_words(raw_text)
         if len(text) == 0 or len(text.split()) <= 2:
             text = message.text
         text = self._split(text)
