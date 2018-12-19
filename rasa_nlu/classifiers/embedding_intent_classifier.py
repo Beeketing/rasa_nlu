@@ -3,18 +3,18 @@ from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
 
-import copy
 import io
+import copy
 import logging
 import os
+from tqdm import tqdm
+
 import typing
 from typing import List, Text, Any, Optional, Dict, Tuple
 
-import numpy as np
-from tqdm import tqdm
-
 from rasa_nlu.classifiers import INTENT_RANKING_LENGTH
 from rasa_nlu.components import Component
+import numpy as np
 
 try:
     import cPickle as pickle
@@ -106,6 +106,7 @@ class EmbeddingIntentClassifier(Component):
         # dropout rate for rnn
         "droprate": 0.2,
 
+
         # flag: if true, the algorithm will split the intent labels into tokens
         #       and use bag-of-words representations for them
         "intent_tokenization_flag": False,
@@ -127,7 +128,7 @@ class EmbeddingIntentClassifier(Component):
                  graph=None,  # type: Optional[tf.Graph]
                  message_placeholder=None,  # type: Optional[tf.Tensor]
                  intent_placeholder=None,  # type: Optional[tf.Tensor]
-                 similarity_op=None,  # type: Optional[tf.Tensor]
+                 similarity_op=None,   # type: Optional[tf.Tensor]
                  word_embed=None,  # type: Optional[tf.Tensor]
                  intent_embed=None  # type: Optional[tf.Tensor]
                  ):
@@ -136,9 +137,8 @@ class EmbeddingIntentClassifier(Component):
 
         self._check_tensorflow()
         super(EmbeddingIntentClassifier, self).__init__(component_config)
-        # print(component_config)
 
-        self._load_params(component_config)
+        self._load_params()
 
         # transform numbers to intents
         self.inv_intent_dict = inv_intent_dict
@@ -198,12 +198,8 @@ class EmbeddingIntentClassifier(Component):
 
         self.evaluate_on_num_examples = config['evaluate_on_num_examples']
 
-    def _load_params(self, component_config, **kwargs):
-        # type: (Dict[Text, Any]) -> None
-        config = copy.deepcopy(self.defaults)
-        if component_config is not None:
-            config = copy.deepcopy(component_config)
-        config.update(kwargs)
+    def _load_params(self):
+        # type: () -> None
 
         self._load_nn_architecture_params(self.component_config)
         self._load_embedding_params(self.component_config)
@@ -232,7 +228,7 @@ class EmbeddingIntentClassifier(Component):
         """Create intent dictionary"""
 
         distinct_intents = set([example.get("intent")
-                                for example in training_data.intent_examples])
+                               for example in training_data.intent_examples])
         return {intent: idx
                 for idx, intent in enumerate(sorted(distinct_intents))}
 
@@ -244,7 +240,7 @@ class EmbeddingIntentClassifier(Component):
         distinct_tokens = set([token
                                for intent in intents
                                for token in intent.split(
-                intent_split_symbol)])
+                                        intent_split_symbol)])
         return {token: idx
                 for idx, token in enumerate(sorted(distinct_tokens))}
 
@@ -404,7 +400,7 @@ class EmbeddingIntentClassifier(Component):
             # create negative indexes out of possible ones
             # except for correct index of b
             negative_indexes = [i for i in range(
-                self.encoded_all_intents.shape[0])
+                                    self.encoded_all_intents.shape[0])
                                 if i != intent_ids[b]]
             negs = np.random.choice(negative_indexes, size=self.num_neg)
 
@@ -468,17 +464,17 @@ class EmbeddingIntentClassifier(Component):
                 batch_b = self._create_batch_b(batch_pos_b, intents_for_b)
 
                 sess_out = self.session.run(
-                    {'loss': loss, 'train_op': train_op},
-                    feed_dict={self.a_in: batch_a,
-                               self.b_in: batch_b,
-                               is_training: True}
+                        {'loss': loss, 'train_op': train_op},
+                        feed_dict={self.a_in: batch_a,
+                                   self.b_in: batch_b,
+                                   is_training: True}
                 )
                 ep_loss += sess_out.get('loss') / batches_per_epoch
 
             if self.evaluate_on_num_examples:
                 if (ep == 0 or
-                                (ep + 1) % self.evaluate_every_num_epochs == 0 or
-                            (ep + 1) == self.epochs):
+                        (ep + 1) % self.evaluate_every_num_epochs == 0 or
+                        (ep + 1) == self.epochs):
                     train_acc = self._output_training_stat(X, intents_for_X,
                                                            is_training)
                     last_loss = ep_loss
@@ -528,10 +524,10 @@ class EmbeddingIntentClassifier(Component):
 
         self.inv_intent_dict = {v: k for k, v in intent_dict.items()}
         self.encoded_all_intents = self._create_encoded_intents(
-            intent_dict)
+                                        intent_dict)
 
         X, Y, intents_for_X = self._prepare_data_for_training(
-            training_data, intent_dict)
+                                training_data, intent_dict)
 
         # check if number of negatives is less than number of intents
         logger.debug("Check if num_neg {} is smaller than "
@@ -681,11 +677,11 @@ class EmbeddingIntentClassifier(Component):
 
         with io.open(os.path.join(
                 model_dir,
-                        self.name + "_inv_intent_dict.pkl"), 'wb') as f:
+                self.name + "_inv_intent_dict.pkl"), 'wb') as f:
             pickle.dump(self.inv_intent_dict, f)
         with io.open(os.path.join(
                 model_dir,
-                        self.name + "_encoded_all_intents.pkl"), 'wb') as f:
+                self.name + "_encoded_all_intents.pkl"), 'wb') as f:
             pickle.dump(self.encoded_all_intents, f)
 
         return {"classifier_file": self.name + ".ckpt"}
@@ -721,24 +717,24 @@ class EmbeddingIntentClassifier(Component):
 
             with io.open(os.path.join(
                     model_dir,
-                            cls.name + "_inv_intent_dict.pkl"), 'rb') as f:
+                    cls.name + "_inv_intent_dict.pkl"), 'rb') as f:
                 inv_intent_dict = pickle.load(f)
             with io.open(os.path.join(
                     model_dir,
-                            cls.name + "_encoded_all_intents.pkl"), 'rb') as f:
+                    cls.name + "_encoded_all_intents.pkl"), 'rb') as f:
                 encoded_all_intents = pickle.load(f)
 
             return cls(
-                component_config=meta,
-                inv_intent_dict=inv_intent_dict,
-                encoded_all_intents=encoded_all_intents,
-                session=sess,
-                graph=graph,
-                message_placeholder=a_in,
-                intent_placeholder=b_in,
-                similarity_op=sim_op,
-                word_embed=word_embed,
-                intent_embed=intent_embed
+                    component_config=meta,
+                    inv_intent_dict=inv_intent_dict,
+                    encoded_all_intents=encoded_all_intents,
+                    session=sess,
+                    graph=graph,
+                    message_placeholder=a_in,
+                    intent_placeholder=b_in,
+                    similarity_op=sim_op,
+                    word_embed=word_embed,
+                    intent_embed=intent_embed
             )
 
         else:
