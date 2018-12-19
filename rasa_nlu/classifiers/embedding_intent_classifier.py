@@ -52,7 +52,8 @@ class EmbeddingIntentClassifier(Component):
 
     Based on the starspace idea from: https://arxiv.org/abs/1709.03856.
     However, in this implementation the `mu` parameter is treated differently
-    and additional hidden layers are added together with dropout."""
+    and additional hidden layers are added together with dropout.
+    """
 
     name = "intent_classifier_tensorflow_embedding"
 
@@ -132,6 +133,7 @@ class EmbeddingIntentClassifier(Component):
                  ):
         # type: (...) -> None
         """Declare instant variables with default values"""
+
         self._check_tensorflow()
         super(EmbeddingIntentClassifier, self).__init__(component_config)
         # print(component_config)
@@ -203,11 +205,11 @@ class EmbeddingIntentClassifier(Component):
             config = copy.deepcopy(component_config)
         config.update(kwargs)
 
-        self._load_nn_architecture_params(config)
-        self._load_embedding_params(config)
-        self._load_regularization_params(config)
-        self._load_flag_if_tokenize_intents(config)
-        self._load_visual_params(config)
+        self._load_nn_architecture_params(self.component_config)
+        self._load_embedding_params(self.component_config)
+        self._load_regularization_params(self.component_config)
+        self._load_flag_if_tokenize_intents(self.component_config)
+        self._load_visual_params(self.component_config)
 
     # package safety checks
     @classmethod
@@ -249,7 +251,9 @@ class EmbeddingIntentClassifier(Component):
     def _create_encoded_intents(self, intent_dict):
         # type: (Dict[Text, int]) -> np.ndarray
         """Create matrix with intents encoded in rows as bag of words.
-           If intent_tokenization_flag is off, returns identity matrix"""
+
+        If intent_tokenization_flag is off, returns identity matrix.
+        """
 
         if self.intent_tokenization_flag:
             intent_token_dict = self._create_intent_token_dict(
@@ -269,8 +273,11 @@ class EmbeddingIntentClassifier(Component):
     def _create_all_Y(self, size):
         # type: (int) -> np.ndarray
         """Stack encoded_all_intents on top of each other
-            to create candidates for training examples
-            to calculate training accuracy"""
+
+        to create candidates for training examples and
+        to calculate training accuracy
+        """
+
         return np.stack([self.encoded_all_intents] * size)
 
     # noinspection PyPep8Naming
@@ -332,9 +339,12 @@ class EmbeddingIntentClassifier(Component):
 
     def _tf_sim(self, a, b):
         # type: (tf.Tensor, tf.Tensor) -> Tuple[tf.Tensor, tf.Tensor]
-        """Define similarity in two cases:
+        """Define similarity
+
+        in two cases:
             sim: between embedded words and embedded intent labels
-            sim_emb: between individual embedded intent labels only"""
+            sim_emb: between individual embedded intent labels only
+        """
 
         if self.similarity_type == 'cosine':
             # normalize embedding vectors for cosine similarity
@@ -379,8 +389,11 @@ class EmbeddingIntentClassifier(Component):
     # training helpers:
     def _create_batch_b(self, batch_pos_b, intent_ids):
         # type: (np.ndarray, np.ndarray) -> np.ndarray
-        """Create batch of intents, where the first is correct intent
-            and the rest are wrong intents sampled randomly"""
+        """Create batch of intents.
+
+        Where the first is correct intent
+        and the rest are wrong intents sampled randomly
+        """
 
         batch_pos_b = batch_pos_b[:, np.newaxis, :]
 
@@ -402,7 +415,10 @@ class EmbeddingIntentClassifier(Component):
     def _linearly_increasing_batch_size(self, epoch):
         # type: (int) -> int
         """Linearly increase batch size with every epoch.
-            The idea comes from https://arxiv.org/abs/1711.00489"""
+
+        The idea comes from https://arxiv.org/abs/1711.00489
+        """
+
         if not isinstance(self.batch_size, list):
             return int(self.batch_size)
 
@@ -424,6 +440,7 @@ class EmbeddingIntentClassifier(Component):
                   ):
         # type: (...) -> None
         """Train tf graph"""
+
         self.session.run(tf.global_variables_initializer())
 
         if self.evaluate_on_num_examples:
@@ -484,6 +501,7 @@ class EmbeddingIntentClassifier(Component):
     def _output_training_stat(self, X, intents_for_X, is_training):
         # type: (np.ndarray, np.ndarray, tf.Tensor) -> np.ndarray
         """Output training statistics"""
+
         n = self.evaluate_on_num_examples
         ids = np.random.permutation(len(X))[:n]
         all_Y = self._create_all_Y(X[ids].shape[0])
@@ -622,7 +640,10 @@ class EmbeddingIntentClassifier(Component):
     def persist(self, model_dir):
         # type: (Text) -> Dict[Text, Any]
         """Persist this model into the passed directory.
-        Return the metadata necessary to load the model again."""
+
+        Return the metadata necessary to load the model again.
+        """
+
         if self.session is None:
             return {"classifier_file": None}
 
