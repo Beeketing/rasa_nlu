@@ -33,6 +33,10 @@ class OrderCodeExtractor(EntityExtractor):
                     if token.pos_ in ["NUM", "PROPN"]:
                         order_code = token.text
                         break
+                    if token.head.pos_ == "VERB" and token.pos_ == "attr":
+                        order_code = token.text
+                        break
+
             if order_code != "":
                 start_idx = text.find(order_code)
                 end_idx = start_idx + len(order_code)
