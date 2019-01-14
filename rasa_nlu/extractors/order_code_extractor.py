@@ -18,7 +18,7 @@ class OrderCodeExtractor(EntityExtractor):
 
     def process(self, message, **kwargs):
         # type: (Message, **Any) -> None
-        if  message.get("intent").get("name") == "order_code":
+        if message.get("intent").get("name") in ["order_code", "order_status"]:
             for entity_mapper in message.get("entities"):
                 if entity_mapper["entity"] == "order_code":
                     return
@@ -30,7 +30,7 @@ class OrderCodeExtractor(EntityExtractor):
                 spacy_nlp = kwargs.get("spacy_nlp", None)
                 doc = spacy_nlp(text)
                 for token in doc:
-                    if token.pos_ == "NUM":
+                    if token.pos_ in ["NUM", "PROPN"]:
                         order_code = token.text
                         break
             if order_code != "":

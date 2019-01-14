@@ -1,2 +1,3 @@
 -r alt_requirements/requirements_bare.txt
 tensorflow-hub
+logmatic-python==0.1.7
