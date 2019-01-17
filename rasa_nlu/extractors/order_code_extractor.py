@@ -52,7 +52,7 @@ class OrderCodeExtractor(EntityExtractor):
                             message.get("entities", []) + [entity],
                             add_to_output=True)
         # Rule-based on single word and is alpha-number
-        if len(text) == 1 and not text.isalpha() and not text.isdigit() and text.isalnum():
+        if len(text.split()) == 1 and not text.isalpha() and not text.isdigit() and text.isalnum():
             entity = {
                 "entity": "order_code",
                 "value": text,
