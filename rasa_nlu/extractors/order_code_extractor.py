@@ -18,11 +18,11 @@ class OrderCodeExtractor(EntityExtractor):
 
     def process(self, message, **kwargs):
         # type: (Message, **Any) -> None
+        text = message.text
         if message.get("intent").get("name") in ["order_code"]:
             for entity_mapper in message.get("entities"):
                 if entity_mapper["entity"] == "order_code":
                     return
-            text = message.text
             order_code = ""
             if len(text.split()) == 1:
                 order_code = text
@@ -51,3 +51,16 @@ class OrderCodeExtractor(EntityExtractor):
                 message.set("entities",
                             message.get("entities", []) + [entity],
                             add_to_output=True)
+        # Rule-based on single word and is alpha-number
+        if len(text) == 1 and not text.isalpha() and not text.isdigit() and text.isalnum():
+            entity = {
+                "entity": "order_code",
+                "value": text,
+                "start": 1,
+                "end": len(text) - 1,
+                "confidence": 0.7,
+                "extractor": self.name,
+            }
+            message.set("entities",
+                        message.get("entities", []) + [entity],
+                        add_to_output=True)
