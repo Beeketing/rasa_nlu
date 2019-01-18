@@ -19,7 +19,7 @@ class OrderCodeExtractor(EntityExtractor):
     def process(self, message, **kwargs):
         # type: (Message, **Any) -> None
         text = message.text
-        if message.get("intent").get("name") in ["order_code"]:
+        if "order_code" in message.get("intent").get("name"):
             for entity_mapper in message.get("entities"):
                 if entity_mapper["entity"] == "order_code":
                     return
