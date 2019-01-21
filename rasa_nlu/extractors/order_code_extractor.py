@@ -30,11 +30,16 @@ class OrderCodeExtractor(EntityExtractor):
                 spacy_nlp = kwargs.get("spacy_nlp", None)
                 doc = spacy_nlp(text)
                 for token in doc:
+                    deps = list(token.lefts)
+                    additional_txt = ""
+                    # Get external punctuation
+                    if len(deps) > 0 and not deps[0].text.isalnum():
+                        additional_txt = deps[0].text
                     if token.pos_ in ["NUM", "PROPN"]:
-                        order_code = token.text
+                        order_code = additional_txt + token.text
                         break
                     if token.head.pos_ == "VERB" and token.dep_ == "attr":
-                        order_code = token.text
+                        order_code = additional_txt + token.text
                         break
 
             if order_code != "":
